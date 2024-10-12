@@ -1,45 +1,56 @@
 package com.stiliyanv.spring_boot_example.customer;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/customers")
-public class CustomerController {
+public class CustomerController implements CustomerControllerApi {
     private final CustomerService customerService;
 
-    @Autowired
     public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
     }
 
-    @GetMapping
-    public List<Customer> getCustomers() {
-        return customerService.getAllCustomers();
+    @Override
+    public ResponseEntity<List<Customer>> getCustomers() {
+        List<Customer> customers = customerService.getAllCustomers();
+        return ResponseEntity.ok(customers);
     }
 
-    @PostMapping
-    public Customer addCustomer(@RequestBody CustomerRequest customerRequest) {
-        return customerService.addNewCustomer(customerRequest);
+    @Override
+    public ResponseEntity<Customer> getCustomer(Integer id) {
+        Customer customer = customerService.getCustomerById(id);
+        if (customer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(customer);
     }
 
-    @DeleteMapping("{id}")
-    public void deleteCustomer(@PathVariable Integer id) {
-        customerService.deleteCustomer(id);
+    @Override
+    public ResponseEntity<Customer> addCustomer(CustomerRequest customerRequest) {
+        Customer newCustomer = customerService.addNewCustomer(customerRequest);
+        return ResponseEntity.ok(newCustomer);
     }
 
-    @PutMapping("{id}")
-    public void updateCustomer(@PathVariable Integer id,
-                               @RequestBody CustomerRequest customerRequest) {
-        customerService.updateCustomer(id, customerRequest);
+    @Override
+    public ResponseEntity<Void> deleteCustomer(Integer id) {
+        if (customerService.existsById(id)) {
+            customerService.deleteCustomerById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+
+    }
+
+    @Override
+    public ResponseEntity<Customer> updateCustomer(Integer id,
+                                                   CustomerRequest customerRequest) {
+        Customer customer = customerService.updateCustomer(id, customerRequest);
+        if (customer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(customer);
     }
 }

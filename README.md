@@ -15,3 +15,4 @@ This is simple spring boot application for training purposes that brings:
 - logging
 - format code
 - testing
+- swagger
